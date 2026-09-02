@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "categoria": "biblia",
+    "pergunta": "Qual foi o primeiro milagre realizado por Jesus segundo o evangelho de João?",
+    "opcoes": [
+      "Multiplicação dos pães",
+      "Cura do cego de nascença",
+      "Transformação de água em vinho em Caná",
+      "Caminhar sobre as águas"
+    ],
+    "correta": 2
+  },
+  {
+    "id": 2,
+    "categoria": "casal",
+    "pergunta": "Quem é mais provável de esquecer onde deixou as chaves de casa?",
+    "opcoes": [
+      "O Noivo",
+      "A Noiva",
+      "Os dois empatados",
+      "Nenhum dos dois"
+    ],
+    "correta": 0
+  }
+]
