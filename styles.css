@@ -97,3 +97,61 @@ h1 {
     box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
     /* Geralmente não piscamos a errada, apenas a certa que o jogador deveria ter escolhido */
 }
+
+/* Layout da Tela Intro para Modo Retrato */
+#screen-intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.intro-photo-container {
+  width: 100%;
+  max-width: 450px;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+}
+
+.photo-landscape {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.intro-content {
+  text-align: center;
+  margin: 15px 0;
+}
+
+/* --- Estilos e Animações do Timer --- */
+#timer {
+  font-size: 3.5rem;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  margin-bottom: 10px;
+}
+
+/* Cores do Cronômetro */
+.timer-verde { color: #2ecc71 !important; }
+.timer-amarelo { color: #f1c40f !important; }
+.timer-laranja { color: #e67e22 !important; }
+.timer-vermelho { color: #e74c3c !important; }
+
+/* Animação para os 3 segundos finais (piscar rápido) */
+@keyframes piscar-rapido {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+.timer-piscar {
+  color: #e74c3c !important;
+  animation: piscar-rapido 0.3s infinite;
+}
