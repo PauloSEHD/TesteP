@@ -1,4 +1,5 @@
 let perguntas = [];
+let perguntasSorteadas = [];
 let perguntaAtualIndex = 0;
 
 // Seletores das telas
@@ -25,20 +26,34 @@ async function carregarPerguntas() {
   }
 }
 
+// Algoritmo para embaralhar uma lista (Fisher-Yates)
+function embaralhar(array) {
+  const lista = [...array];
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}
+
 // Iniciar o jogo
 function iniciarJogo() {
   if (perguntas.length === 0) return;
+  
+  // Embaralha o banco de perguntas a cada nova partida
+  perguntasSorteadas = embaralhar(perguntas);
   perguntaAtualIndex = 0;
-  exibirPergunta(perguntaAtualIndex);
+  
+  exibirPergunta();
   
   screenIntro.classList.remove('active');
   screenResult.classList.remove('active');
   screenGame.classList.add('active');
 }
 
-// Exibir pergunta atual na tela
-function exibirPergunta(index) {
-  const q = perguntas[index];
+// Exibir a pergunta atual da lista sorteada
+function exibirPergunta() {
+  const q = perguntasSorteadas[perguntaAtualIndex];
   questionText.innerText = q.pergunta;
   btn0.innerText = `1. ${q.opcoes[0]}`;
   btn1.innerText = `2. ${q.opcoes[1]}`;
@@ -48,7 +63,7 @@ function exibirPergunta(index) {
 
 // Conferir resposta do jogador
 function verificarResposta(opcaoSelecionada) {
-  const q = perguntas[perguntaAtualIndex];
+  const q = perguntasSorteadas[perguntaAtualIndex];
   
   screenGame.classList.remove('active');
   screenResult.classList.add('active');
@@ -61,22 +76,30 @@ function verificarResposta(opcaoSelecionada) {
     resultMessage.style.color = "#e74c3c";
   }
 
-  // Voltar para a tela inicial após 3 segundos
+  // Após 2.5 segundos de feedback, avança ou finaliza
   setTimeout(() => {
-    screenResult.classList.remove('active');
-    screenIntro.classList.add('active');
-  }, 3000);
+    perguntaAtualIndex++;
+
+    // Se ainda houver perguntas na fila, mostra a próxima
+    if (perguntaAtualIndex < perguntasSorteadas.length) {
+      exibirPergunta();
+      screenResult.classList.remove('active');
+      screenGame.classList.add('active');
+    } else {
+      // Se acabaram as perguntas, volta para a tela inicial
+      screenResult.classList.remove('active');
+      screenIntro.classList.add('active');
+    }
+  }, 2500);
 }
 
-// Escutar teclas do teclado (ou botões da Raspberry Pi Pico)
+// Escutar teclas do teclado (simulando botões físicos ou Raspberry)
 document.addEventListener('keydown', (event) => {
-  // Se estiver na tela inicial, qualquer tecla inicia o jogo
   if (screenIntro.classList.contains('active')) {
     iniciarJogo();
     return;
   }
 
-  // Se estiver na tela de jogo, teclas 1, 2, 3 ou 4 respondem
   if (screenGame.classList.contains('active')) {
     if (['1', '2', '3', '4'].includes(event.key)) {
       const opcao = parseInt(event.key) - 1;
@@ -85,12 +108,12 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// Permitir clique nos botões para testes pelo celular
+// Permitir toque nos botões para testes no celular
 btn0.addEventListener('click', () => verificarResposta(0));
 btn1.addEventListener('click', () => verificarResposta(1));
 btn2.addEventListener('click', () => verificarResposta(2));
 btn3.addEventListener('click', () => verificarResposta(3));
 screenIntro.addEventListener('click', () => iniciarJogo());
 
-// Inicializa o carregamento do JSON
+// Inicializar banco de perguntas
 carregarPerguntas();
