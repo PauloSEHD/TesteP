@@ -1,16 +1,38 @@
 let perguntas = [];
 let perguntasSorteadas = [];
 let perguntaAtualIndex = 0;
-let tempoRestante = 15;
+let tempoRestante = 20;
 let timerInterval = null;
-let jogoAtivo = false; // Nova flag para controlar se o jogo está rolando
+let photoInterval = null;
+let jogoAtivo = false;
 
-// Seletores das telas
+// Banco de Imagens (adicione o caminho das suas fotos)
+const galeriaFotos = [
+  'assets/img/foto1.jpg',
+  'assets/img/foto2.jpg',
+  'assets/img/foto3.jpg',
+  'assets/img/foto4.jpg'
+];
+
+// Banco de Áudios (adicione o caminho dos seus sons)
+const sonsAcerto = [
+  'assets/audio/acerto1.mp3',
+  'assets/audio/acerto2.mp3'
+];
+
+const sonsErro = [
+  'assets/audio/erro1.mp3',
+  'assets/audio/erro2.mp3'
+];
+
+// Seletores das telas e elementos
 const screenIntro = document.getElementById('screen-intro');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
-// Seletores do jogo
+const imgTop = document.getElementById('img-top');
+const imgBottom = document.getElementById('img-bottom');
+
 const timerElement = document.getElementById('timer');
 const questionText = document.getElementById('question-text');
 const btn0 = document.getElementById('btn-0');
@@ -19,21 +41,51 @@ const btn2 = document.getElementById('btn-2');
 const btn3 = document.getElementById('btn-3');
 const resultMessage = document.getElementById('result-message');
 
-// Atalho para pegar todos os botões de opção
 const optionButtons = [btn0, btn1, btn2, btn3];
 
-// Carregar perguntas do arquivo JSON
+// Carregar perguntas do JSON
 async function carregarPerguntas() {
   try {
     const resposta = await fetch('perguntas.json');
     perguntas = await resposta.json();
-    console.log('Perguntas carregadas com sucesso!');
   } catch (erro) {
     console.error('Erro ao carregar perguntas:', erro);
   }
 }
 
-// Algoritmo para embaralhar uma lista (Fisher-Yates)
+// Tocar som aleatório de acordo com o tipo
+function tocarSom(tipo) {
+  let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
+  if (lista.length === 0) return;
+  const somSorteado = lista[Math.floor(Math.random() * lista.length)];
+  const audio = new Audio(somSorteado);
+  audio.play().catch(e => console.log("Áudio aguardando interação:", e));
+}
+
+// Trocar fotos da tela inicial
+function alternarFotosApresentacao() {
+  if (galeriaFotos.length < 2) return;
+
+  let idx1 = Math.floor(Math.random() * galeriaFotos.length);
+  let idx2;
+  do {
+    idx2 = Math.floor(Math.random() * galeriaFotos.length);
+  } while (idx1 === idx2);
+
+  imgTop.src = galeriaFotos[idx1];
+  imgBottom.src = galeriaFotos[idx2];
+}
+
+function iniciarCarrosselFotos() {
+  alternarFotosApresentacao();
+  photoInterval = setInterval(alternarFotosApresentacao, 5000);
+}
+
+function pararCarrosselFotos() {
+  clearInterval(photoInterval);
+}
+
+// Embaralhar vetor
 function embaralhar(array) {
   const lista = [...array];
   for (let i = lista.length - 1; i > 0; i--) {
@@ -43,17 +95,15 @@ function embaralhar(array) {
   return lista;
 }
 
-// Limpar as classes de feedback dos botões
 function limparClassesBotoes() {
-  optionButtons.forEach(btn => {
-    btn.classList.remove('correta', 'incorreta');
-  });
+  optionButtons.forEach(btn => btn.classList.remove('correta', 'incorreta'));
 }
 
 // Iniciar o jogo
 function iniciarJogo() {
   if (perguntas.length === 0) return;
   
+  pararCarrosselFotos();
   perguntasSorteadas = embaralhar(perguntas);
   perguntaAtualIndex = 0;
   jogoAtivo = true;
@@ -65,9 +115,8 @@ function iniciarJogo() {
   screenGame.classList.add('active');
 }
 
-// Exibir a pergunta atual e iniciar o timer
 function exibirPergunta() {
-  limparClassesBotoes(); // Garante que os botões comecem limpos
+  limparClassesBotoes();
 
   const q = perguntasSorteadas[perguntaAtualIndex];
   questionText.innerText = q.pergunta;
@@ -79,21 +128,34 @@ function exibirPergunta() {
   iniciarTimer();
 }
 
-// Controle da contagem regressiva
+// Atualizar cores do timer dinamicamente
+function atualizarEstiloTimer(tempo) {
+  timerElement.className = ''; // Limpa classes anteriores
+
+  if (tempo >= 15) {
+    timerElement.classList.add('timer-verde');
+  } else if (tempo >= 10) {
+    timerElement.classList.add('timer-amarelo');
+  } else if (tempo >= 6) {
+    timerElement.classList.add('timer-laranja');
+  } else if (tempo >= 4) {
+    timerElement.classList.add('timer-vermelho');
+  } else {
+    timerElement.classList.add('timer-piscar');
+  }
+}
+
+// Controle do Timer de 20s
 function iniciarTimer() {
   clearInterval(timerInterval);
-  tempoRestante = 15;
+  tempoRestante = 20;
   timerElement.innerText = tempoRestante;
-  timerElement.style.color = "white"; // Reseta cor do timer
+  atualizarEstiloTimer(tempoRestante);
 
   timerInterval = setInterval(() => {
     tempoRestante--;
     timerElement.innerText = tempoRestante;
-
-    // Alerta visual quando o tempo está acabando (menos de 5s)
-    if (tempoRestante <= 5) {
-        timerElement.style.color = "#e74c3c";
-    }
+    atualizarEstiloTimer(tempoRestante);
 
     if (tempoRestante <= 0) {
       clearInterval(timerInterval);
@@ -102,59 +164,56 @@ function iniciarTimer() {
   }, 1000);
 }
 
-// Tratamento quando o tempo acaba -> VOLTA PARA A TELA INICIAL
+// Timeout: 5 segundos antes de retornar para a tela inicial
 function tempoEsgotado() {
-  jogoAtivo = false; // Jogo parado
+  jogoAtivo = false;
+  tocarSom('erro');
   
   screenGame.classList.remove('active');
   screenResult.classList.add('active');
   resultMessage.innerText = "TEMPO ESGOTADO! ⏱️";
-  resultMessage.style.color = "#f1c40f"; // Amarelo
+  resultMessage.style.color = "#f1c40f";
 
-  // Após o feedback, volta para a tela de introdução
   setTimeout(() => {
     screenResult.classList.remove('active');
     screenIntro.classList.add('active');
-  }, 3500); // Dá um tempo maior para ver a mensagem
+    iniciarCarrosselFotos();
+  }, 5000); // Exibe por 5 segundos
 }
 
-// Conferir resposta do jogador com animações
+// Resposta do Jogador
 function verificarResposta(opcaoSelecionada) {
-  if (!jogoAtivo) return; // Previne cliques múltiplos ou após timeout
+  if (!jogoAtivo) return;
   clearInterval(timerInterval);
 
   const q = perguntasSorteadas[perguntaAtualIndex];
   const indiceCorreto = q.correta;
 
-  // APLICA AS CLASSES DE FEEDBACK NOS BOTÕES DO GAME
   if (opcaoSelecionada === indiceCorreto) {
-    // Acertou: Pisca o escolhido em verde
     optionButtons[opcaoSelecionada].classList.add('correta');
+    tocarSom('acerto');
   } else {
-    // Errou: Mostra o escolhido em vermelho
     optionButtons[opcaoSelecionada].classList.add('incorreta');
-    // E pisca o correto em verde
     optionButtons[indiceCorreto].classList.add('correta');
+    tocarSom('erro');
   }
 
-  // Pequeno delay ANTES de ir para a tela de resultado, para ver a piscada
   setTimeout(() => {
     screenGame.classList.remove('active');
     screenResult.classList.add('active');
 
     if (opcaoSelecionada === indiceCorreto) {
-        resultMessage.innerText = "RESPOSTA CORRETA! 🎉";
-        resultMessage.style.color = "#2ecc71"; // Verde
+      resultMessage.innerText = "RESPOSTA CORRETA! 🎉";
+      resultMessage.style.color = "#2ecc71";
     } else {
-        resultMessage.innerText = "RESPOSTA INCORRETA! ❌";
-        resultMessage.style.color = "#e74c3c"; // Vermelho
+      resultMessage.innerText = "RESPOSTA INCORRETA! ❌";
+      resultMessage.style.color = "#e74c3c";
     }
 
     agendarProximaPergunta();
-  }, 2000); // Espera 2 segundos com os botões coloridos
+  }, 2000);
 }
 
-// Transição para a próxima pergunta ou encerramento
 function agendarProximaPergunta() {
   setTimeout(() => {
     perguntaAtualIndex++;
@@ -164,15 +223,15 @@ function agendarProximaPergunta() {
       screenResult.classList.remove('active');
       screenGame.classList.add('active');
     } else {
-      // Acabaram as perguntas, jogo finalizado
       jogoAtivo = false;
       screenResult.classList.remove('active');
       screenIntro.classList.add('active');
+      iniciarCarrosselFotos();
     }
-  }, 2500); // Tempo na tela de resultado
+  }, 2500);
 }
 
-// Escutar teclas do teclado (simulando botões físicos ou Raspberry)
+// Escuta Teclado / Botões Físicos
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
     iniciarJogo();
@@ -181,18 +240,17 @@ document.addEventListener('keydown', (event) => {
 
   if (screenGame.classList.contains('active') && jogoAtivo) {
     if (['1', '2', '3', '4'].includes(event.key)) {
-      const opcao = parseInt(event.key) - 1;
-      verificarResposta(opcao);
+      verificarResposta(parseInt(event.key) - 1);
     }
   }
 });
 
-// Permitir toque nos botões para testes no celular
 btn0.addEventListener('click', () => verificarResposta(0));
 btn1.addEventListener('click', () => verificarResposta(1));
 btn2.addEventListener('click', () => verificarResposta(2));
 btn3.addEventListener('click', () => verificarResposta(3));
 screenIntro.addEventListener('click', () => iniciarJogo());
 
-// Inicializar banco de perguntas
+// Inicialização
 carregarPerguntas();
+iniciarCarrosselFotos();
