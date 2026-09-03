@@ -10,13 +10,23 @@
   <div id="app">
     <!-- Tela de Descanso / Apresentação -->
     <div id="screen-intro" class="screen active">
-      <h1>Quiz dos Noivos</h1>
-      <p>Insira uma cédula ou aperte um botão para começar!</p>
+      <div class="intro-photo-container">
+        <img id="img-top" src="assets/img/foto1.jpg" alt="Foto Noivos Topo" class="photo-landscape">
+      </div>
+      
+      <div class="intro-content">
+        <h1>Quiz dos Noivos</h1>
+        <p>Insira uma cédula ou aperte um botão para começar!</p>
+      </div>
+
+      <div class="intro-photo-container">
+        <img id="img-bottom" src="assets/img/foto2.jpg" alt="Foto Noivos Base" class="photo-landscape">
+      </div>
     </div>
 
     <!-- Tela do Jogo / Pergunta -->
     <div id="screen-game" class="screen">
-      <div id="timer">15</div>
+      <div id="timer">20</div>
       <h2 id="question-text">Carregando pergunta...</h2>
       <div class="options-grid">
         <button class="btn-option" id="btn-0">1. Opção A</button>
@@ -26,7 +36,7 @@
       </div>
     </div>
 
-    <!-- Tela de Feedback (Acerto / Erro) -->
+    <!-- Tela de Resultado / Feedback -->
     <div id="screen-result" class="screen">
       <h1 id="result-message">RESPOSTA CORRETA!</h1>
     </div>
