@@ -1,6 +1,8 @@
 let perguntas = [];
 let perguntasSorteadas = [];
 let perguntaAtualIndex = 0;
+let tempoRestante = 15;
+let timerInterval = null;
 
 // Seletores das telas
 const screenIntro = document.getElementById('screen-intro');
@@ -8,6 +10,7 @@ const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
 // Seletores do jogo
+const timerElement = document.getElementById('timer');
 const questionText = document.getElementById('question-text');
 const btn0 = document.getElementById('btn-0');
 const btn1 = document.getElementById('btn-1');
@@ -40,7 +43,6 @@ function embaralhar(array) {
 function iniciarJogo() {
   if (perguntas.length === 0) return;
   
-  // Embaralha o banco de perguntas a cada nova partida
   perguntasSorteadas = embaralhar(perguntas);
   perguntaAtualIndex = 0;
   
@@ -51,7 +53,7 @@ function iniciarJogo() {
   screenGame.classList.add('active');
 }
 
-// Exibir a pergunta atual da lista sorteada
+// Exibir a pergunta atual e iniciar o timer
 function exibirPergunta() {
   const q = perguntasSorteadas[perguntaAtualIndex];
   questionText.innerText = q.pergunta;
@@ -59,10 +61,41 @@ function exibirPergunta() {
   btn1.innerText = `2. ${q.opcoes[1]}`;
   btn2.innerText = `3. ${q.opcoes[2]}`;
   btn3.innerText = `4. ${q.opcoes[3]}`;
+
+  iniciarTimer();
+}
+
+// Controle da contagem regressiva
+function iniciarTimer() {
+  clearInterval(timerInterval);
+  tempoRestante = 15;
+  timerElement.innerText = tempoRestante;
+
+  timerInterval = setInterval(() => {
+    tempoRestante--;
+    timerElement.innerText = tempoRestante;
+
+    if (tempoRestante <= 0) {
+      clearInterval(timerInterval);
+      tempoEsgotado();
+    }
+  }, 1000);
+}
+
+// Tratamento quando o tempo acaba
+function tempoEsgotado() {
+  screenGame.classList.remove('active');
+  screenResult.classList.add('active');
+  resultMessage.innerText = "TEMPO ESGOTADO! ⏱️";
+  resultMessage.style.color = "#f1c40f";
+
+  agendarProximaPergunta();
 }
 
 // Conferir resposta do jogador
 function verificarResposta(opcaoSelecionada) {
+  clearInterval(timerInterval);
+
   const q = perguntasSorteadas[perguntaAtualIndex];
   
   screenGame.classList.remove('active');
@@ -76,17 +109,19 @@ function verificarResposta(opcaoSelecionada) {
     resultMessage.style.color = "#e74c3c";
   }
 
-  // Após 2.5 segundos de feedback, avança ou finaliza
+  agendarProximaPergunta();
+}
+
+// Transição para a próxima pergunta ou encerramento
+function agendarProximaPergunta() {
   setTimeout(() => {
     perguntaAtualIndex++;
 
-    // Se ainda houver perguntas na fila, mostra a próxima
     if (perguntaAtualIndex < perguntasSorteadas.length) {
       exibirPergunta();
       screenResult.classList.remove('active');
       screenGame.classList.add('active');
     } else {
-      // Se acabaram as perguntas, volta para a tela inicial
       screenResult.classList.remove('active');
       screenIntro.classList.add('active');
     }
