@@ -6,7 +6,7 @@ let timerInterval = null;
 let photoInterval = null;
 let jogoAtivo = false;
 
-// Banco de Imagens (adicione o caminho das suas fotos)
+// Banco de Imagens (Ajuste os nomes conforme colocar os arquivos na pasta assets/img/)
 const galeriaFotos = [
   'assets/img/foto1.jpg',
   'assets/img/foto2.jpg',
@@ -14,15 +14,13 @@ const galeriaFotos = [
   'assets/img/foto4.jpg'
 ];
 
-// Banco de Áudios (adicione o caminho dos seus sons)
+// Banco de Áudios (Ajuste os nomes conforme colocar na pasta assets/audio/)
 const sonsAcerto = [
-  'assets/audio/acerto1.mp3',
-  'assets/audio/acerto2.mp3'
+  'assets/audio/acerto1.mp3'
 ];
 
 const sonsErro = [
-  'assets/audio/erro1.mp3',
-  'assets/audio/erro2.mp3'
+  'assets/audio/erro1.mp3'
 ];
 
 // Seletores das telas e elementos
@@ -53,18 +51,41 @@ async function carregarPerguntas() {
   }
 }
 
-// Tocar som aleatório de acordo com o tipo
+// Tocar som com proteção contra ausência de arquivo
 function tocarSom(tipo) {
   let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
   if (lista.length === 0) return;
   const somSorteado = lista[Math.floor(Math.random() * lista.length)];
   const audio = new Audio(somSorteado);
-  audio.play().catch(e => console.log("Áudio aguardando interação:", e));
+  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação"));
 }
 
-// Trocar fotos da tela inicial
+// Carregar imagem com segurança
+function definirImagem(elementoImg, src) {
+  if (!src) {
+    elementoImg.style.display = 'none';
+    return;
+  }
+  const imgTemp = new Image();
+  imgTemp.src = src;
+  imgTemp.onload = () => {
+    elementoImg.src = src;
+    elementoImg.style.display = 'block';
+  };
+  imgTemp.onerror = () => {
+    elementoImg.style.display = 'none';
+  };
+}
+
+// Alternar fotos da apresentação
 function alternarFotosApresentacao() {
-  if (galeriaFotos.length < 2) return;
+  if (galeriaFotos.length === 0) return;
+
+  if (galeriaFotos.length === 1) {
+    definirImagem(imgTop, galeriaFotos[0]);
+    imgBottom.style.display = 'none';
+    return;
+  }
 
   let idx1 = Math.floor(Math.random() * galeriaFotos.length);
   let idx2;
@@ -72,8 +93,8 @@ function alternarFotosApresentacao() {
     idx2 = Math.floor(Math.random() * galeriaFotos.length);
   } while (idx1 === idx2);
 
-  imgTop.src = galeriaFotos[idx1];
-  imgBottom.src = galeriaFotos[idx2];
+  definirImagem(imgTop, galeriaFotos[idx1]);
+  definirImagem(imgBottom, galeriaFotos[idx2]);
 }
 
 function iniciarCarrosselFotos() {
@@ -128,9 +149,9 @@ function exibirPergunta() {
   iniciarTimer();
 }
 
-// Atualizar cores do timer dinamicamente
+// Atualizar estilo do timer
 function atualizarEstiloTimer(tempo) {
-  timerElement.className = ''; // Limpa classes anteriores
+  timerElement.className = '';
 
   if (tempo >= 15) {
     timerElement.classList.add('timer-verde');
@@ -164,7 +185,7 @@ function iniciarTimer() {
   }, 1000);
 }
 
-// Timeout: 5 segundos antes de retornar para a tela inicial
+// Timeout: 5s na tela de resultado antes de voltar
 function tempoEsgotado() {
   jogoAtivo = false;
   tocarSom('erro');
@@ -178,7 +199,7 @@ function tempoEsgotado() {
     screenResult.classList.remove('active');
     screenIntro.classList.add('active');
     iniciarCarrosselFotos();
-  }, 5000); // Exibe por 5 segundos
+  }, 5000);
 }
 
 // Resposta do Jogador
@@ -231,7 +252,7 @@ function agendarProximaPergunta() {
   }, 2500);
 }
 
-// Escuta Teclado / Botões Físicos
+// Event Listeners
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
     iniciarJogo();
