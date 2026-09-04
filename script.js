@@ -6,7 +6,7 @@ let timerInterval = null;
 let photoInterval = null;
 let jogoAtivo = false;
 
-// Banco de Imagens (Ajuste ou adicione nomes conforme os arquivos na pasta assets/img/)
+// Banco de Imagens (Arquivos dentro da pasta assets/img/)
 const galeriaFotos = [
   'assets/img/foto1.jpg',
   'assets/img/foto2.jpg',
@@ -14,7 +14,7 @@ const galeriaFotos = [
   'assets/img/foto4.jpg'
 ];
 
-// Banco de Áudios (Ajuste ou adicione nomes conforme os arquivos na pasta assets/audio/)
+// Banco de Áudios (Arquivos dentro da pasta assets/audio/)
 const sonsAcerto = [
   'assets/audio/acerto1.mp3'
 ];
@@ -23,7 +23,7 @@ const sonsErro = [
   'assets/audio/erro1.mp3'
 ];
 
-// Seletores das telas e elementos
+// Seletores das telas e elementos da interface
 const screenIntro = document.getElementById('screen-intro');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
@@ -41,7 +41,7 @@ const resultMessage = document.getElementById('result-message');
 
 const optionButtons = [btn0, btn1, btn2, btn3];
 
-// Carregar perguntas do JSON
+// Carregar perguntas do arquivo JSON
 async function carregarPerguntas() {
   try {
     const resposta = await fetch('perguntas.json');
@@ -52,16 +52,16 @@ async function carregarPerguntas() {
   }
 }
 
-// Tocar som com proteção contra ausência de arquivo ou falta de interação prévia
+// Reproduzir efeito sonoro sem interromper a execução caso o arquivo não exista
 function tocarSom(tipo) {
   let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
   if (lista.length === 0) return;
   const somSorteado = lista[Math.floor(Math.random() * lista.length)];
   const audio = new Audio(somSorteado);
-  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação:", e));
+  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação do usuário"));
 }
 
-// Carregar imagem de forma segura (não quebra o layout se a foto não existir)
+// Definir a imagem com segurança (esconde a tag caso a foto falhe no carregamento)
 function definirImagem(elementoImg, src) {
   if (!src) {
     elementoImg.style.display = 'none';
@@ -78,7 +78,7 @@ function definirImagem(elementoImg, src) {
   };
 }
 
-// Alternar fotos da apresentação sem repetir no topo e base
+// Rotacionar fotos na tela de descanso sem repetir a mesma foto no topo e base
 function alternarFotosApresentacao() {
   if (galeriaFotos.length === 0) return;
 
@@ -107,7 +107,7 @@ function pararCarrosselFotos() {
   clearInterval(photoInterval);
 }
 
-// Embaralhar vetor (Fisher-Yates)
+// Embaralhar elementos do array (Fisher-Yates)
 function embaralhar(array) {
   const lista = [...array];
   for (let i = lista.length - 1; i > 0; i--) {
@@ -121,7 +121,7 @@ function limparClassesBotoes() {
   optionButtons.forEach(btn => btn.classList.remove('correta', 'incorreta'));
 }
 
-// Iniciar o jogo
+// Iniciar rodada do jogo
 function iniciarJogo() {
   if (perguntas.length === 0) return;
   
@@ -150,7 +150,7 @@ function exibirPergunta() {
   iniciarTimer();
 }
 
-// Atualizar cores do timer dinamicamente
+// Atualizar cores do contador numérico
 function atualizarEstiloTimer(tempo) {
   timerElement.className = '';
 
@@ -167,7 +167,7 @@ function atualizarEstiloTimer(tempo) {
   }
 }
 
-// Controle do Timer de 20s
+// Controle da contagem regressiva de 20s
 function iniciarTimer() {
   clearInterval(timerInterval);
   tempoRestante = 20;
@@ -186,7 +186,7 @@ function iniciarTimer() {
   }, 1000);
 }
 
-// Timeout: exibe por 5 segundos antes de voltar para a tela inicial
+// Tratamento de tempo esgotado (aguarda 5s e retorna à tela inicial)
 function tempoEsgotado() {
   jogoAtivo = false;
   tocarSom('erro');
@@ -203,7 +203,7 @@ function tempoEsgotado() {
   }, 5000);
 }
 
-// Resposta do Jogador
+// Avaliação da resposta fornecida pelo usuário
 function verificarResposta(opcaoSelecionada) {
   if (!jogoAtivo) return;
   clearInterval(timerInterval);
@@ -253,16 +253,7 @@ function agendarProximaPergunta() {
   }, 2500);
 }
 
-// Auxiliar para registrar eventos de clique e toque em telas mobile
-function adicionarEventoToque(element, callback) {
-  element.addEventListener('click', callback);
-  element.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    callback();
-  }, { passive: false });
-}
-
-// Escutar teclado (Teclas 1, 2, 3, 4)
+// Atendimento de teclas numéricas (1, 2, 3, 4)
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
     iniciarJogo();
@@ -276,13 +267,13 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// Registrar eventos nos botões e tela de intro
-adicionarEventoToque(btn0, () => verificarResposta(0));
-adicionarEventoToque(btn1, () => verificarResposta(1));
-adicionarEventoToque(btn2, () => verificarResposta(2));
-adicionarEventoToque(btn3, () => verificarResposta(3));
-adicionarEventoToque(screenIntro, () => iniciarJogo());
+// Eventos diretos de clique para acionamento por toque ou mouse
+btn0.addEventListener('click', () => verificarResposta(0));
+btn1.addEventListener('click', () => verificarResposta(1));
+btn2.addEventListener('click', () => verificarResposta(2));
+btn3.addEventListener('click', () => verificarResposta(3));
+screenIntro.addEventListener('click', () => iniciarJogo());
 
-// Inicialização
+// Inicialização do aplicativo
 carregarPerguntas();
 iniciarCarrosselFotos();
