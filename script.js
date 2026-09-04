@@ -6,7 +6,7 @@ let timerInterval = null;
 let photoInterval = null;
 let jogoAtivo = false;
 
-// Banco de Imagens (Arquivos dentro da pasta assets/img/)
+// Banco de Imagens
 const galeriaFotos = [
   'assets/img/foto1.jpg',
   'assets/img/foto2.jpg',
@@ -14,7 +14,7 @@ const galeriaFotos = [
   'assets/img/foto4.jpg'
 ];
 
-// Banco de Áudios (Arquivos dentro da pasta assets/audio/)
+// Banco de Áudios
 const sonsAcerto = [
   'assets/audio/acerto1.mp3'
 ];
@@ -23,11 +23,12 @@ const sonsErro = [
   'assets/audio/erro1.mp3'
 ];
 
-// Seletores das telas e elementos da interface
+// Seletores das telas e elementos
 const screenIntro = document.getElementById('screen-intro');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
+const btnStart = document.getElementById('btn-start');
 const imgTop = document.getElementById('img-top');
 const imgBottom = document.getElementById('img-bottom');
 
@@ -52,16 +53,16 @@ async function carregarPerguntas() {
   }
 }
 
-// Reproduzir efeito sonoro sem interromper a execução caso o arquivo não exista
+// Reproduzir áudio
 function tocarSom(tipo) {
   let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
   if (lista.length === 0) return;
   const somSorteado = lista[Math.floor(Math.random() * lista.length)];
   const audio = new Audio(somSorteado);
-  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação do usuário"));
+  audio.play().catch(e => console.log("Áudio aguardando interação do usuário"));
 }
 
-// Definir a imagem com segurança (esconde a tag caso a foto falhe no carregamento)
+// Carregar imagem de forma segura
 function definirImagem(elementoImg, src) {
   if (!src) {
     elementoImg.style.display = 'none';
@@ -78,7 +79,7 @@ function definirImagem(elementoImg, src) {
   };
 }
 
-// Rotacionar fotos na tela de descanso sem repetir a mesma foto no topo e base
+// Alternar fotos na tela de descanso
 function alternarFotosApresentacao() {
   if (galeriaFotos.length === 0) return;
 
@@ -107,7 +108,7 @@ function pararCarrosselFotos() {
   clearInterval(photoInterval);
 }
 
-// Embaralhar elementos do array (Fisher-Yates)
+// Embaralhar vetor (Fisher-Yates)
 function embaralhar(array) {
   const lista = [...array];
   for (let i = lista.length - 1; i > 0; i--) {
@@ -123,7 +124,10 @@ function limparClassesBotoes() {
 
 // Iniciar rodada do jogo
 function iniciarJogo() {
-  if (perguntas.length === 0) return;
+  if (perguntas.length === 0) {
+    console.warn("Nenhuma pergunta carregada ainda.");
+    return;
+  }
   
   pararCarrosselFotos();
   perguntasSorteadas = embaralhar(perguntas);
@@ -150,7 +154,7 @@ function exibirPergunta() {
   iniciarTimer();
 }
 
-// Atualizar cores do contador numérico
+// Estilo dinâmico do timer
 function atualizarEstiloTimer(tempo) {
   timerElement.className = '';
 
@@ -186,7 +190,7 @@ function iniciarTimer() {
   }, 1000);
 }
 
-// Tratamento de tempo esgotado (aguarda 5s e retorna à tela inicial)
+// Tempo esgotado
 function tempoEsgotado() {
   jogoAtivo = false;
   tocarSom('erro');
@@ -203,7 +207,7 @@ function tempoEsgotado() {
   }, 5000);
 }
 
-// Avaliação da resposta fornecida pelo usuário
+// Resposta do jogador
 function verificarResposta(opcaoSelecionada) {
   if (!jogoAtivo) return;
   clearInterval(timerInterval);
@@ -253,10 +257,12 @@ function agendarProximaPergunta() {
   }, 2500);
 }
 
-// Atendimento de teclas numéricas (1, 2, 3, 4)
+// Ouvintes de Teclado (1, 2, 3, 4 e Enter/Espaço)
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
-    iniciarJogo();
+    if (['Enter', ' '].includes(event.key)) {
+      iniciarJogo();
+    }
     return;
   }
 
@@ -267,13 +273,13 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// Eventos diretos de clique para acionamento por toque ou mouse
+// Eventos de Clique
+btnStart.addEventListener('click', () => iniciarJogo());
 btn0.addEventListener('click', () => verificarResposta(0));
 btn1.addEventListener('click', () => verificarResposta(1));
 btn2.addEventListener('click', () => verificarResposta(2));
 btn3.addEventListener('click', () => verificarResposta(3));
-screenIntro.addEventListener('click', () => iniciarJogo());
 
-// Inicialização do aplicativo
+// Inicialização
 carregarPerguntas();
 iniciarCarrosselFotos();
