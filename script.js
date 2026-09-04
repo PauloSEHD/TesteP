@@ -42,18 +42,28 @@ const resultMessage = document.getElementById('result-message');
 
 const optionButtons = [btn0, btn1, btn2, btn3];
 
-// Carregar perguntas do arquivo JSON
+// Carregar perguntas do arquivo JSON com tratamento e fallback de nome
 async function carregarPerguntas() {
   try {
-    const resposta = await fetch('perguntas.json');
+    let resposta = await fetch('perguntas.json');
+    if (!resposta.ok) {
+      // Tenta com P maiúsculo caso o arquivo no GitHub esteja como Perguntas.json
+      resposta = await fetch('Perguntas.json');
+    }
+    
+    if (!resposta.ok) {
+      throw new Error(`Erro HTTP! status: ${resposta.status}`);
+    }
+
     perguntas = await resposta.json();
-    console.log('Perguntas carregadas com sucesso!');
+    console.log(`Sucesso! ${perguntas.length} perguntas carregadas.`);
   } catch (erro) {
-    console.error('Erro ao carregar perguntas:', erro);
+    console.error('Erro ao carregar perguntas.json:', erro);
+    alert('Atenção: Não foi possível carregar o arquivo perguntas.json. Verifique o arquivo no GitHub.');
   }
 }
 
-// Reproduzir áudio
+// Reproduzir áudio de forma segura
 function tocarSom(tipo) {
   let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
   if (lista.length === 0) return;
@@ -125,7 +135,7 @@ function limparClassesBotoes() {
 // Iniciar rodada do jogo
 function iniciarJogo() {
   if (perguntas.length === 0) {
-    console.warn("Nenhuma pergunta carregada ainda.");
+    alert("As perguntas ainda estão sendo carregadas ou o arquivo perguntas.json não foi encontrado!");
     return;
   }
   
@@ -257,7 +267,7 @@ function agendarProximaPergunta() {
   }, 2500);
 }
 
-// Ouvintes de Teclado (1, 2, 3, 4 e Enter/Espaço)
+// Ouvintes de Teclado
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
     if (['Enter', ' '].includes(event.key)) {
@@ -283,3 +293,4 @@ btn3.addEventListener('click', () => verificarResposta(3));
 // Inicialização
 carregarPerguntas();
 iniciarCarrosselFotos();
+  
