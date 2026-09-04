@@ -6,7 +6,7 @@ let timerInterval = null;
 let photoInterval = null;
 let jogoAtivo = false;
 
-// Banco de Imagens (Ajuste os nomes conforme colocar os arquivos na pasta assets/img/)
+// Banco de Imagens (Ajuste ou adicione nomes conforme os arquivos na pasta assets/img/)
 const galeriaFotos = [
   'assets/img/foto1.jpg',
   'assets/img/foto2.jpg',
@@ -14,7 +14,7 @@ const galeriaFotos = [
   'assets/img/foto4.jpg'
 ];
 
-// Banco de Áudios (Ajuste os nomes conforme colocar na pasta assets/audio/)
+// Banco de Áudios (Ajuste ou adicione nomes conforme os arquivos na pasta assets/audio/)
 const sonsAcerto = [
   'assets/audio/acerto1.mp3'
 ];
@@ -46,21 +46,22 @@ async function carregarPerguntas() {
   try {
     const resposta = await fetch('perguntas.json');
     perguntas = await resposta.json();
+    console.log('Perguntas carregadas com sucesso!');
   } catch (erro) {
     console.error('Erro ao carregar perguntas:', erro);
   }
 }
 
-// Tocar som com proteção contra ausência de arquivo
+// Tocar som com proteção contra ausência de arquivo ou falta de interação prévia
 function tocarSom(tipo) {
   let lista = tipo === 'acerto' ? sonsAcerto : sonsErro;
   if (lista.length === 0) return;
   const somSorteado = lista[Math.floor(Math.random() * lista.length)];
   const audio = new Audio(somSorteado);
-  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação"));
+  audio.play().catch(e => console.log("Áudio indisponível ou aguardando interação:", e));
 }
 
-// Carregar imagem com segurança
+// Carregar imagem de forma segura (não quebra o layout se a foto não existir)
 function definirImagem(elementoImg, src) {
   if (!src) {
     elementoImg.style.display = 'none';
@@ -77,7 +78,7 @@ function definirImagem(elementoImg, src) {
   };
 }
 
-// Alternar fotos da apresentação
+// Alternar fotos da apresentação sem repetir no topo e base
 function alternarFotosApresentacao() {
   if (galeriaFotos.length === 0) return;
 
@@ -106,7 +107,7 @@ function pararCarrosselFotos() {
   clearInterval(photoInterval);
 }
 
-// Embaralhar vetor
+// Embaralhar vetor (Fisher-Yates)
 function embaralhar(array) {
   const lista = [...array];
   for (let i = lista.length - 1; i > 0; i--) {
@@ -149,7 +150,7 @@ function exibirPergunta() {
   iniciarTimer();
 }
 
-// Atualizar estilo do timer
+// Atualizar cores do timer dinamicamente
 function atualizarEstiloTimer(tempo) {
   timerElement.className = '';
 
@@ -185,7 +186,7 @@ function iniciarTimer() {
   }, 1000);
 }
 
-// Timeout: 5s na tela de resultado antes de voltar
+// Timeout: exibe por 5 segundos antes de voltar para a tela inicial
 function tempoEsgotado() {
   jogoAtivo = false;
   tocarSom('erro');
@@ -252,7 +253,16 @@ function agendarProximaPergunta() {
   }, 2500);
 }
 
-// Event Listeners
+// Auxiliar para registrar eventos de clique e toque em telas mobile
+function adicionarEventoToque(element, callback) {
+  element.addEventListener('click', callback);
+  element.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    callback();
+  }, { passive: false });
+}
+
+// Escutar teclado (Teclas 1, 2, 3, 4)
 document.addEventListener('keydown', (event) => {
   if (screenIntro.classList.contains('active')) {
     iniciarJogo();
@@ -266,11 +276,12 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-btn0.addEventListener('click', () => verificarResposta(0));
-btn1.addEventListener('click', () => verificarResposta(1));
-btn2.addEventListener('click', () => verificarResposta(2));
-btn3.addEventListener('click', () => verificarResposta(3));
-screenIntro.addEventListener('click', () => iniciarJogo());
+// Registrar eventos nos botões e tela de intro
+adicionarEventoToque(btn0, () => verificarResposta(0));
+adicionarEventoToque(btn1, () => verificarResposta(1));
+adicionarEventoToque(btn2, () => verificarResposta(2));
+adicionarEventoToque(btn3, () => verificarResposta(3));
+adicionarEventoToque(screenIntro, () => iniciarJogo());
 
 // Inicialização
 carregarPerguntas();
